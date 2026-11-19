@@ -83,14 +83,14 @@ function getUntouched() {
 }
 
 /**
- * Runs `ducky install` for the temp home.
+ * Runs `ducky-pro install` for the temp home.
  *
  * @param   {object} env - Extra env
  * @returns {object} { applied, code, out }
  */
 function install(env) {
 
-    let result = child_process.spawnSync(process.execPath, [path.join(dir_root, 'bin', 'ducky'), 'install', '--yes', '--no-sudo', '--skip', 'github,npm,whisper'], {
+    let result = child_process.spawnSync(process.execPath, [path.join(dir_root, 'bin', 'ducky-pro'), 'install', '--yes', '--no-sudo', '--skip', 'github,npm,whisper'], {
         encoding : 'utf8',
         env      : Object.assign({}, process.env, env),
         input    : ''

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// ducky — the local install's command (plan_0011 §4).
+// ducky-pro — the local install's command (plan_0011 §4).
 //
-//   ducky install [--path <dir>] [--dry-run] [--yes] [--no-sudo]
+//   ducky-pro install [--path <dir>] [--dry-run] [--yes] [--no-sudo]
 //                 [--skip a,b] [--only a,b]
-//   ducky start [--no-open]     ducky stop [--force]     ducky status
-//   ducky update                ducky doctor             ducky link
-//   ducky logs [api|app|local|sidequest|nginx] [-f]
+//   ducky-pro start [--no-open]     ducky-pro stop [--force]     ducky-pro status
+//   ducky-pro update                ducky-pro doctor             ducky-pro link
+//   ducky-pro logs [api|app|local|sidequest|nginx] [-f]
 //
 // The install root: --path <dir> (or --root), else DUCKY_HOME; install
 // then takes the current folder, every other command the nearest folder
@@ -29,7 +29,7 @@ async function run() {
     let ctx  = null
 
     if (verbs.indexOf(verb) === -1) {
-        console.log('usage: ducky <' + verbs.join('|') + '> [options]   (see the head of bin/ducky)')
+        console.log('usage: ducky-pro <' + verbs.join('|') + '> [options]   (see the head of bin/ducky-pro)')
         return verb ? 2 : 0
     }
 

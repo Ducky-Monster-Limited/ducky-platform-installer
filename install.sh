@@ -1,13 +1,13 @@
 #!/bin/bash
 # install.sh — the bootstrap: Xcode tools, Homebrew, node, then
-# `bin/ducky install` (guided: shows each step, asks before it applies).
+# `bin/ducky-pro install` (guided: shows each step, asks before it applies).
 #   ./install.sh --path <dir>   one install: GitHub ssh key, clones, envs, ducky command
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
 
 if [[ "$(uname -s)" != "Darwin" || "$(uname -m)" != "arm64" ]]; then
-    echo "[err] the ducky install needs macOS on Apple silicon"
+    echo "[err] the ducky-pro install needs macOS on Apple silicon"
     exit 1
 fi
 
@@ -33,4 +33,4 @@ if ! command -v node > /dev/null 2>&1; then
     export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
 fi
 
-exec node "$here/bin/ducky" install "$@"
+exec node "$here/bin/ducky-pro" install "$@"

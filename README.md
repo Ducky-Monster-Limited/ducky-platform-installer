@@ -20,7 +20,7 @@ file anywhere. The only credential is the machine's **GitHub ssh key**:
    your account to `Ducky-Monster-Limited`.
 4. Someone who can already read the secrets adds you as a reader once:
    `node ducky_platform_shared/scripts/secrets.js recipients add <your login>`
-   (README of ducky-secrets), then you `ducky update`.
+   (README of ducky-secrets), then you `ducky-pro update`.
 
 The repos are cloned as siblings under `<root>/repos` (their relative
 symlinks resolve), `ducky_secrets` among them. A fresh clone has no
@@ -57,9 +57,9 @@ itself), reloading a root-owned nginx.
 
 ## Commands
 
-`ducky install | start | stop | status | update | doctor | logs [api|app|local|sidequest|nginx] [-f] | link`
+`ducky-pro install | start | stop | status | update | doctor | logs [api|app|local|sidequest|nginx] [-f] | link`
 
-`ducky start` ends with the boot pull: `POST https://api.ducky.localhost/api/0.1.0/local/pull`
+`ducky-pro start` ends with the boot pull: `POST https://api.ducky.localhost/api/0.1.0/local/pull`
 (gate only, no session or client key, through nginx). It never blocks the
 start, it prints one line:
 
@@ -72,7 +72,7 @@ start, it prints one line:
 | anything else | `pull: not done (<status>)` |
 
 The api also pulls by itself about 5 s after it starts, so the hook matters
-when the api was already running. `ducky status` shows the link as linked,
+when the api was already running. `ducky-pro status` shows the link as linked,
 not linked or unlinked (revoked).
 
 The other commands find the install by `--path`, else `DUCKY_HOME`, else
@@ -86,5 +86,5 @@ git). A second instance sets `instance` and shifted ports in its
 ```
 node test/run.js                                     # steps twice on a temp home (clones the workspace's committed HEADs), nothing outside touched
 node test/localhost-cookies.js                       # *.localhost cookies + CORS in a real Chrome
-node test/pull.js                                    # ducky start's pull hook: 200 / 409 / 401 / 503 lines on a fake api
+node test/pull.js                                    # ducky-pro start's pull hook: 200 / 409 / 401 / 503 lines on a fake api
 ```

@@ -1,4 +1,4 @@
-// pull.js — `ducky start`'s boot pull hook against L4's POST
+// pull.js — `ducky-pro start`'s boot pull hook against L4's POST
 // /:v/local/pull (plan_0011 §6): a fake api on loopback (a child process,
 // curl blocks this one) answers 200 / 409 / 401 / 503 / html; each gives
 // one status line, none throws. No sudo, nothing outside loopback.
