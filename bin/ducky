@@ -1,0 +1,53 @@
+#!/usr/bin/env node
+// ducky — the local install's command (plan_0011 §4).
+//
+//   ducky install [--dev] [--dry-run] [--yes] [--no-sudo] [--skip a,b]
+//                 [--only a,b] [--token-file <file>]
+//   ducky start [--no-open]     ducky stop [--force]     ducky status
+//   ducky update                ducky doctor             ducky link
+//   ducky logs [api|app|local|sidequest|nginx] [-f]
+//
+// DUCKY_HOME (default ~/Ducky) picks the install.
+
+let commands = require('../lib/commands')
+
+// ---
+
+let verbs = ['doctor', 'install', 'link', 'logs', 'start', 'status', 'stop', 'update']
+
+/**
+ * The run.
+ *
+ * @returns {Promise<number>} Exit code
+ */
+async function run() {
+
+    let argv = process.argv.slice(2)
+    let verb = argv[0]
+    let ctx  = null
+
+    if (verbs.indexOf(verb) === -1) {
+        console.log('usage: ducky <' + verbs.join('|') + '> [options]   (see the head of bin/ducky)')
+        return verb ? 2 : 0
+    }
+
+    ctx = commands.getContext(argv.slice(1))
+
+    if (verb === 'logs') return commands.logs(ctx, argv[1] && !/^-/.test(argv[1]) ? argv[1] : 'api')
+
+    return commands[verb](ctx)
+
+}
+
+// ---
+
+run().then(function(code) {
+
+    process.exitCode = code
+
+}).catch(function(err) {
+
+    console.log('[err]  ' + err.message)
+    process.exitCode = 1
+
+})

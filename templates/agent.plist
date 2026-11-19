@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>{{LABEL}}</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>{{NODE}}</string>
+        <string>--max-old-space-size=4096</string>
+        <string>--stack-trace-limit=5</string>
+        <string>--preserve-symlinks</string>
+        <string>app.js</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>{{CWD}}</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>APP_ENV_FILE</key>
+        <string>{{ENV_FILE}}</string>
+        <key>DUCKY_HOME</key>
+        <string>{{HOME}}</string>
+        <key>NODE_ENV</key>
+        <string>{{NODE_ENV}}</string>
+        <key>PATH</key>
+        <string>{{PATH}}</string>
+        <key>TZ</key>
+        <string>utc</string>
+        <key>VERSION</key>
+        <string>{{VERSION}}</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+    <key>StandardOutPath</key>
+    <string>{{LOG}}</string>
+    <key>StandardErrorPath</key>
+    <string>{{LOG}}</string>
+</dict>
+</plist>

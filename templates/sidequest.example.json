@@ -1,0 +1,13 @@
+{
+    "obs": {
+        "address": "127.0.0.1",
+        "password": "<the obs-websocket password, Tools > WebSocket Server Settings>",
+        "port": 4455
+    },
+    "recordings": "~/Movies",
+    "whisper": {
+        "bin": "/opt/homebrew/bin/whisper-cli",
+        "model": "~/Ducky/models/whisper/ggml-large-v3-turbo.bin"
+    },
+    "workspace_id": null
+}
