@@ -32,11 +32,21 @@ import reads `dev.json` of ducky-secrets.
 
 ## Install
 
+On a new Mac, in Terminal:
+
 ```
-git clone git@github.com:Ducky-Monster-Limited/ducky-platform-installer.git
-cd ducky-platform-installer
-./install.sh --path ~/Somewhere/ducky
+curl -fsSL https://raw.githubusercontent.com/Ducky-Monster-Limited/ducky-platform-installer/main/install.sh | bash
 ```
+
+It installs what is missing (Xcode tools, Homebrew, node, the GitHub
+cli), signs you in to GitHub in the browser (the account that is in
+`Ducky-Monster-Limited`), asks where to install (default
+`~/Workspace/ducky_pro`), clones this installer to `<root>/installer`
+and runs the guided `ducky-pro install`. This repo is public on purpose:
+it holds no secret, the platform repos are private (org members only)
+and the secrets open only for the GitHub keys in ducky-secrets.
+
+From a checkout: `./install.sh --path ~/Workspace/ducky_pro`.
 
 The install root is `--path <dir>` (or `--root`), else `DUCKY_HOME`, else
 the folder you run it in (never the home folder itself, never this repo).
