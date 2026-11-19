@@ -22,6 +22,8 @@
         <string>{{HOME}}</string>
         <key>NODE_ENV</key>
         <string>{{NODE_ENV}}</string>
+        <key>NODE_EXTRA_CA_CERTS</key>
+        <string>{{CA_FILE}}</string>
         <key>PATH</key>
         <string>{{PATH}}</string>
         <key>TZ</key>

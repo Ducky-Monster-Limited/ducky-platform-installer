@@ -182,6 +182,7 @@ function main() {
     lint = child_process.spawnSync('/usr/bin/plutil', ['-lint', plist], { encoding : 'utf8' })
     check('plist: plutil -lint', lint.status === 0, lint.stdout.trim())
     check('plist: env file + production mode', /env\.local\.api\.json/.test(fs.readFileSync(plist, 'utf8')) && /<string>production<\/string>/.test(fs.readFileSync(plist, 'utf8')))
+    check('plist: node trusts the mkcert CA', /<key>NODE_EXTRA_CA_CERTS<\/key>\s*<string>[^<]*rootCA\.pem<\/string>/.test(fs.readFileSync(plist, 'utf8')))
     check('hosts: test block in the temp hosts file', /127\.0\.0\.1 ducky-test\.localhost api\.ducky-test\.localhost/.test(fs.readFileSync(env.DUCKY_HOSTS_FILE, 'utf8')))
     check('config: 0700, secrets 0600', (fs.statSync(path.join(home, 'config')).mode & 0o777) === 0o700 && (fs.statSync(path.join(home, 'config', 'secrets.json')).mode & 0o777) === 0o600)
     envs = JSON.parse(fs.readFileSync(path.join(home, 'repos', 'ducky_platform_api', 'env.local.api.json'), 'utf8'))
