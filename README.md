@@ -4,33 +4,50 @@ Installs the ducky pro platform locally on macOS (Apple silicon) at
 `https://ducky.localhost` (app) and `https://api.ducky.localhost` (api), and
 gives you the `ducky` command. Plan: `plan_0011` §4 (ducky_platform_shared).
 
-## Two modes
+## What a machine needs
 
-| | release (the default) | dev (`--dev`, Marc's machines) |
-|---|---|---|
-| code | versioned bundles (release assets of this repo, `bundle-<n>`) | git clones of the repos |
-| needs | a personal read-only release token | GitHub access to the org's repos |
-| v4 source | none (only the files `services.system` reads) | `ducky_design` cloned read-only |
-| `ducky update` | the next bundle only | `git pull --ff-only` per repo |
-| runs as | `NODE_ENV=production`, the builds' versions | `NODE_ENV=development` |
+One install for everyone on the team (plan_0013): the code as git clones
+of the org's repos, the team's shared secrets from `ducky-secrets`
+(sops + age, decrypted with the machine's ssh key), no hand-kept secret
+file anywhere. The only credential is the machine's **GitHub ssh key**:
 
-The cloud keeps a release-mode person limited: their own pro account
-(device link), only the workspaces they are invited to, provider keys
-pulled only for workspace owners/admins.
+1. The `github` step finds `~/.ssh/id_ed25519` or creates it (ssh-keygen
+   asks a passphrase; the macOS keychain keeps it).
+2. It puts the public key on your GitHub account: with the `gh` cli when
+   you are signed in to it (asked), else it copies the key, opens
+   github.com/settings/ssh/new and waits until GitHub knows it.
+3. It checks the org's repos are reachable; if not, an org owner adds
+   your account to `Ducky-Monster-Limited`.
+4. Someone who can already read the secrets adds you as a reader once:
+   `node ducky_platform_shared/scripts/secrets.js recipients add <your login>`
+   (README of ducky-secrets), then you `ducky update`.
+
+The repos are cloned as siblings under `<root>/repos` (their relative
+symlinks resolve), `ducky_secrets` among them. A fresh clone has no
+`env.json` (git ignores it); the envs start from the committed
+`env.base.json` (no secrets), the install mints its own machine secrets
+(`config/secrets.json`, 0600: session secrets, client pair, the key that
+encrypts the database's provider keys), and the one-time provider key
+import reads `dev.json` of ducky-secrets.
 
 ## Install
 
 ```
-git clone https://github.com/Ducky-Monster-Limited/ducky-platform-installer.git
+git clone git@github.com:Ducky-Monster-Limited/ducky-platform-installer.git
 cd ducky-platform-installer
-./install.sh            # release mode: asks for your release token
-./install.sh --dev      # dev mode
+./install.sh --path ~/Somewhere/ducky
 ```
+
+The install root is `--path <dir>` (or `--root`), else `DUCKY_HOME`, else
+the folder you run it in (never the home folder itself, never this repo).
+`--dev` is accepted and changes nothing (there is one install).
 
 Guided: every step shows what it will do and asks first. Re-running is
 safe (each step checks before it acts). Flags: `--dry-run`, `--yes`
 (non-sudo steps without asking), `--no-sudo` (list the sudo steps for a
-person instead), `--skip a,b`, `--only a,b`, `--token-file <file>`.
+person instead), `--skip a,b`, `--only a,b`. A `clone_base` in
+`config/ducky.json` clones from a local folder instead of GitHub (tests,
+a machine whose key is not on GitHub yet).
 
 Never touched: an existing mongod (reused as it is: config, dbpath, data),
 other nginx server files, nginx.conf, other launchd agents. Sudo is only
@@ -58,57 +75,16 @@ The api also pulls by itself about 5 s after it starts, so the hook matters
 when the api was already running. `ducky status` shows the link as linked,
 not linked or unlinked (revoked).
 
-`DUCKY_HOME` (default `~/Ducky`) picks the install; a second instance
-sets `instance` and shifted ports in its `config/ducky.json`.
-
-## Release tokens (coordinator / Marc)
-
-Mint one per person, never share one:
-
-1. github.com → Settings → Developer settings → Fine-grained personal
-   access tokens → Generate new token.
-2. Name `ducky-release-<person>`, resource owner `Ducky-Monster-Limited`,
-   expiration 90 days (renew by minting a new one).
-3. Repository access: Only select repositories → `ducky-platform-installer`.
-4. Repository permissions: Contents → Read-only (Metadata read-only is
-   added by GitHub). Nothing else.
-5. If the org requires approval for fine-grained tokens, approve it under
-   the org's Settings → Personal access tokens → Pending requests.
-6. Hand the token over privately; the person pastes it at install (stored
-   in `~/Ducky/config/release_token`, 0600, never printed).
-
-Revoke: delete the token (Developer settings → Fine-grained tokens), or as
-org owner revoke it under the org's Settings → Personal access tokens →
-Active tokens. The person's `ducky update` then fails with "token revoked
-or expired"; their install keeps running the bundle it has. Revoke their
-device link on the cloud too (account settings → devices) to stop pulls.
-
-With this token a person can read this repo and download its release
-assets, nothing else in the org.
-
-## Publishing a bundle (part of a pro release)
-
-After a pro release (`/apps-deploy`: `build/0.0.1-pro-rc<N>/` committed on
-the api and the pro app's main):
-
-```
-node scripts/release-bundle.js --n <next bundle number> --out /tmp/ducky-bundle-<n>/bundle-<n>
-node test/run.js --bundle /tmp/ducky-bundle-<n>      # install twice on a temp home
-node scripts/release-bundle.js --n <n> --out … --publish --yes   # tell the coordinator first
-```
-
-The bundle carries the api and app release builds (self-contained), the
-local migrations, base envs with every credential masked (the build fails
-on a leak), `local-envs.js`, the pro cli copy (freeze ref + the build's
-patches + marker, no `.git`) and only `lib/system-defaults.json`,
-`themes/`, `v4/tokens.css` of `ducky_design` at a pinned commit.
-`manifest.json` lists every source sha and each archive's sha256; the
-installer refuses an archive whose hash differs.
+The other commands find the install by `--path`, else `DUCKY_HOME`, else
+the nearest folder up from where you are that holds `config/ducky.json`,
+else the last install (remembered in this repo's `.ducky_home`, ignored by
+git). A second instance sets `instance` and shifted ports in its
+`config/ducky.json`.
 
 ## Tests
 
 ```
-node test/run.js --bundle <dir holding bundle-<n>/>   # steps twice on a temp home, nothing outside touched
+node test/run.js                                     # steps twice on a temp home (clones the workspace's committed HEADs), nothing outside touched
 node test/localhost-cookies.js                       # *.localhost cookies + CORS in a real Chrome
 node test/pull.js                                    # ducky start's pull hook: 200 / 409 / 401 / 503 lines on a fake api
 ```

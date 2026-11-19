@@ -1,8 +1,7 @@
 #!/bin/bash
 # install.sh — the bootstrap: Xcode tools, Homebrew, node, then
 # `bin/ducky install` (guided: shows each step, asks before it applies).
-#   ./install.sh            release mode (asks for your release token)
-#   ./install.sh --dev      dev mode (git clones; Marc's machines)
+#   ./install.sh --path <dir>   one install: GitHub ssh key, clones, envs, ducky command
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"

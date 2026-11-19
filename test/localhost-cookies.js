@@ -149,7 +149,7 @@ async function run() {
     let port       = Number(arg('--port', 14170))
     let port_app   = port + 2
     let port_api   = port + 1
-    let dir_pptr   = arg('--puppeteer', path.resolve(__dirname, '../../ducky4/ducky_platform_app_pro/node_modules/puppeteer'))
+    let dir_pptr   = arg('--puppeteer', path.resolve(__dirname, '../../ducky/ducky_platform_app_pro/node_modules/puppeteer'))
     let puppeteer  = require(dir_pptr)
     let dir        = fs.mkdtempSync(path.join(os.tmpdir(), 'ducky-cookies-'))
     let tls        = newCert(dir)

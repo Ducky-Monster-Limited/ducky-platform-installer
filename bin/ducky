@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 // ducky — the local install's command (plan_0011 §4).
 //
-//   ducky install [--dev] [--dry-run] [--yes] [--no-sudo] [--skip a,b]
-//                 [--only a,b] [--token-file <file>]
+//   ducky install [--path <dir>] [--dry-run] [--yes] [--no-sudo]
+//                 [--skip a,b] [--only a,b]
 //   ducky start [--no-open]     ducky stop [--force]     ducky status
 //   ducky update                ducky doctor             ducky link
 //   ducky logs [api|app|local|sidequest|nginx] [-f]
 //
-// DUCKY_HOME (default ~/Ducky) picks the install.
+// The install root: --path <dir> (or --root), else DUCKY_HOME; install
+// then takes the current folder, every other command the nearest folder
+// up holding config/ducky.json, else the last install.
 
 let commands = require('../lib/commands')
 
@@ -31,7 +33,7 @@ async function run() {
         return verb ? 2 : 0
     }
 
-    ctx = commands.getContext(argv.slice(1))
+    ctx = commands.getContext(argv.slice(1), verb)
 
     if (verb === 'logs') return commands.logs(ctx, argv[1] && !/^-/.test(argv[1]) ? argv[1] : 'api')
 

@@ -4,13 +4,14 @@
 //     dialog timeout, the probe location
 //   - plist render: plutil -lint, our labels, the env file
 //   - install twice on a temp DUCKY_HOME (instance "test", shifted ports,
-//     a local release bundle, temp launchd / nginx / hosts targets): the
-//     second run applies nothing
+//     clones of the committed repos next to the installer, temp launchd /
+//     nginx / hosts targets): the second run applies nothing; the envs
+//     start from env.base.json, ducky_secrets is cloned
 //   - the existing mongod, the real nginx servers folder, /etc/hosts and
 //     ~/Library/LaunchAgents are the same before and after
 //
-// usage: node test/run.js --bundle <dir holding bundle-<n>/> [--keep]
-//        (build one with scripts/release-bundle.js --n <n> --out <dir>/bundle-<n>)
+// usage: node test/run.js [--keep]   (clones the workspace's committed
+//        HEADs, so commit first)
 
 let child_process = require('child_process')
 let crypto        = require('crypto')
@@ -22,21 +23,6 @@ let path          = require('path')
 
 let dir_root = path.resolve(__dirname, '..')
 let rows     = []
-
-/**
- * One command line value.
- *
- * @param   {string} name     - The flag
- * @param   {*}      fallback - The value when missing
- * @returns {*} The value
- */
-function arg(name, fallback) {
-
-    let index = process.argv.indexOf(name)
-
-    return index !== -1 && process.argv[index + 1] ? process.argv[index + 1] : fallback
-
-}
 
 /**
  * Records and prints one row.
@@ -104,7 +90,7 @@ function getUntouched() {
  */
 function install(env) {
 
-    let result = child_process.spawnSync(process.execPath, [path.join(dir_root, 'bin', 'ducky'), 'install', '--yes', '--no-sudo', '--skip', 'npm,whisper'], {
+    let result = child_process.spawnSync(process.execPath, [path.join(dir_root, 'bin', 'ducky'), 'install', '--yes', '--no-sudo', '--skip', 'github,npm,whisper'], {
         encoding : 'utf8',
         env      : Object.assign({}, process.env, env),
         input    : ''
@@ -126,7 +112,6 @@ function install(env) {
  */
 function main() {
 
-    let bundles  = arg('--bundle', null)
     let tmp      = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'ducky-test-'))
     let home     = path.join(tmp, 'DuckyTest')
     let env      = {
@@ -143,10 +128,9 @@ function main() {
         app_port     : 4272,
         host         : 'ducky-test.localhost',
         https_port   : 14443,
+        clone_base   : path.resolve(dir_root, '..'),
         instance     : 'test',
-        mode         : 'release',
-        redis_db     : 5,
-        release      : { current : null, local_dir : bundles, repo : 'ducky-platform-installer' }
+        redis_db     : 5
     }
     let before   = getUntouched()
     let first    = null
@@ -156,11 +140,6 @@ function main() {
     let plist    = null
     let lint     = null
     let envs     = null
-
-    if (!bundles) {
-        console.log('[err] --bundle <dir holding bundle-<n>/> is required')
-        return 2
-    }
 
     fs.writeFileSync(env.DUCKY_HOSTS_FILE, '127.0.0.1 localhost\n')
     fs.mkdirSync(path.join(home, 'config'), { recursive : true })
@@ -181,14 +160,16 @@ function main() {
     plist = path.join(env.DUCKY_LAUNCH_AGENTS, 'com.duckymonster.ducky.test.api.plist')
     lint = child_process.spawnSync('/usr/bin/plutil', ['-lint', plist], { encoding : 'utf8' })
     check('plist: plutil -lint', lint.status === 0, lint.stdout.trim())
-    check('plist: env file + production mode', /env\.local\.api\.json/.test(fs.readFileSync(plist, 'utf8')) && /<string>production<\/string>/.test(fs.readFileSync(plist, 'utf8')))
+    check('plist: env file + development mode', /env\.local\.api\.json/.test(fs.readFileSync(plist, 'utf8')) && /<string>development<\/string>/.test(fs.readFileSync(plist, 'utf8')))
     check('plist: node trusts the mkcert CA', /<key>NODE_EXTRA_CA_CERTS<\/key>\s*<string>[^<]*rootCA\.pem<\/string>/.test(fs.readFileSync(plist, 'utf8')))
     check('hosts: test block in the temp hosts file', /127\.0\.0\.1 ducky-test\.localhost api\.ducky-test\.localhost/.test(fs.readFileSync(env.DUCKY_HOSTS_FILE, 'utf8')))
     check('config: 0700, secrets 0600', (fs.statSync(path.join(home, 'config')).mode & 0o777) === 0o700 && (fs.statSync(path.join(home, 'config', 'secrets.json')).mode & 0o777) === 0o600)
     envs = JSON.parse(fs.readFileSync(path.join(home, 'repos', 'ducky_platform_api', 'env.local.api.json'), 'utf8'))
     check('api env: local block, ports, db, driver', envs.local && envs.local.on === true && envs.http.port === 4271 && /\/ducky_test_api$/.test(envs.mongo.url) && envs.services.productions.media_driver === 'local' && envs.services.productions.media_root === path.join(home, 'media'))
-    check('api env: the install\'s client pair, system files from the bundle', !!(envs.platform.client && envs.platform.client.client_key) && /ducky_design\/lib\/system-defaults\.json$/.test(envs.services.system.catalog || ''))
+    check('api env: the install\'s client pair, system files from the clones', !!(envs.platform.client && envs.platform.client.client_key) && /ducky_design\/lib\/system-defaults\.json$/.test(envs.services.system.catalog || ''))
     check('api env: sources path_roots', Array.isArray(envs.services.sources.path_roots) && envs.services.sources.path_roots[0] === os.homedir())
+    check('clones: ducky_secrets, no env.json (the base env without secrets)', fs.existsSync(path.join(home, 'repos', 'ducky_secrets', 'dev.json')) && !fs.existsSync(path.join(home, 'repos', 'ducky_platform_api', 'env.json')) && fs.existsSync(path.join(home, 'repos', 'ducky_platform_api', 'env.base.json')))
+    check('api env: the key import reads ducky-secrets, session secrets minted', envs.services.system.import_secrets === 'ducky-secrets' && !/^<missing/.test(envs.session.secret || '<missing') && !/^<missing/.test(envs.services.system.secret_key || '<missing'))
     check('migrations recorded', /000-baseline\.js/.test(fs.readFileSync(path.join(home, 'config', 'migrations.json'), 'utf8')))
 
     // nothing outside touched
