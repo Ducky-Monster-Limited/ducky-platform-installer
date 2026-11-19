@@ -57,7 +57,7 @@ itself), reloading a root-owned nginx.
 
 ## Commands
 
-`ducky-pro install | start | stop | status | update | doctor | logs [api|app|local|sidequest|nginx] [-f] | link`
+`ducky-pro install | start | stop | status | update | health | logs [api|app|local|sidequest|nginx] [-f] | link`
 
 `ducky-pro start` ends with the boot pull: `POST https://api.ducky.localhost/api/0.1.0/local/pull`
 (gate only, no session or client key, through nginx). It never blocks the
