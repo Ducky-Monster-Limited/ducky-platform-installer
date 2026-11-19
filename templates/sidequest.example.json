@@ -1,7 +1,7 @@
 {
     "obs": {
         "address": "127.0.0.1",
-        "password": "<the obs-websocket password, Tools > WebSocket Server Settings>",
+        "password": "",
         "port": 4455
     },
     "recordings": "~/Movies",
