@@ -42,6 +42,22 @@ itself), reloading a root-owned nginx.
 
 `ducky install | start | stop | status | update | doctor | logs [api|app|local|sidequest|nginx] [-f] | link`
 
+`ducky start` ends with the boot pull: `POST https://api.ducky.localhost/api/0.1.0/local/pull`
+(gate only, no session or client key, through nginx). It never blocks the
+start, it prints one line:
+
+| answer | line |
+|---|---|
+| 200 `{ pulled, removed, ts }` | `pull: <n> pulled, <n> removed` |
+| 409 not linked | `pull: this machine is not linked yet, open https://ducky.localhost/local/link` |
+| 401 `This machine is unlinked.` (revoked) | the message, and the link page to link again |
+| 503 cloud offline | `pull: the cloud is offline, working from the last pull` |
+| anything else | `pull: not done (<status>)` |
+
+The api also pulls by itself about 5 s after it starts, so the hook matters
+when the api was already running. `ducky status` shows the link as linked,
+not linked or unlinked (revoked).
+
 `DUCKY_HOME` (default `~/Ducky`) picks the install; a second instance
 sets `instance` and shifted ports in its `config/ducky.json`.
 
@@ -94,4 +110,5 @@ installer refuses an archive whose hash differs.
 ```
 node test/run.js --bundle <dir holding bundle-<n>/>   # steps twice on a temp home, nothing outside touched
 node test/localhost-cookies.js                       # *.localhost cookies + CORS in a real Chrome
+node test/pull.js                                    # ducky start's pull hook: 200 / 409 / 401 / 503 lines on a fake api
 ```
