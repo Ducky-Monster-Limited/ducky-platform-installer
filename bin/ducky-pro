@@ -11,6 +11,7 @@
 // then takes the current folder, every other command the nearest folder
 // up holding config/ducky.json, else the last install.
 
+let brand    = require('../lib/brand')
 let commands = require('../lib/commands')
 
 // ---
@@ -28,10 +29,26 @@ async function run() {
     let verb = argv[0]
     let ctx  = null
 
-    if (verbs.indexOf(verb) === -1) {
-        console.log('usage: ducky-pro <' + verbs.join('|') + '> [options]   (see the head of bin/ducky-pro)')
-        return verb ? 2 : 0
+    // the cli's way: bare = logo + help, --help = help, --version
+    if (!verb) {
+        brand.showLogo()
+        brand.showHelp()
+        return 0
     }
+    if (verb === '--help' || verb === '-h' || verb === 'help') {
+        brand.showHelp()
+        return 0
+    }
+    if (verb === '--version' || verb === '-v') {
+        console.log('ducky-pro ' + brand.getVersion())
+        return 0
+    }
+    if (verbs.indexOf(verb) === -1) {
+        brand.showHelp()
+        return 2
+    }
+
+    if (verb === 'install' && process.stdout.isTTY) brand.showLogo()
 
     ctx = commands.getContext(argv.slice(1), verb)
 
