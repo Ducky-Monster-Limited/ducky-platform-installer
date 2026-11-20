@@ -38,8 +38,10 @@ On a new Mac, in Terminal:
 curl -fsSL https://raw.githubusercontent.com/Ducky-Monster-Limited/ducky-platform-installer/main/install.sh | bash
 ```
 
-It installs what is missing (Xcode tools, Homebrew, node, the GitHub
-cli), signs you in to GitHub in the browser (the account that is in
+It installs what is missing (Xcode tools, Homebrew, nvm with node 26 —
+the platform runs on node 26 only, an older node is refused and
+`ducky-pro update` moves an install onto nvm's 26 and reinstalls its
+node modules once — the GitHub cli), signs you in to GitHub in the browser (the account that is in
 `Ducky-Monster-Limited`), asks where to install (default
 `~/Workspace/ducky_pro`), clones this installer to `<root>/installer`
 and runs the guided `ducky-pro install`. This repo is public on purpose:

@@ -3,7 +3,7 @@
 #
 #   curl -fsSL https://raw.githubusercontent.com/Ducky-Monster-Limited/ducky-platform-installer/main/install.sh | bash
 #
-# Xcode tools, Homebrew, node, the GitHub sign-in (gh, in the browser),
+# Xcode tools, Homebrew, nvm + node 26, the GitHub sign-in (gh, in the browser),
 # the installer cloned into the install folder (<root>/installer), then
 # the guided `ducky-pro install`. From a checkout: ./install.sh [--path <dir>].
 # Every question reads the terminal, so it works piped from curl.
@@ -55,12 +55,29 @@ if ! command -v brew > /dev/null 2>&1; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
-# NODE 20
+# NODE 26 (nvm, as the cloud images; an older node is never used)
 
-if ! command -v node > /dev/null 2>&1; then
-    echo "[plan] node 20: brew install node@20"
-    brew install node@20
-    export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+
+if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
+    echo "[plan] nvm: its official install script (v0.40.8), no shell profile touched"
+    curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | PROFILE=/dev/null bash
+fi
+
+# (nvm.sh is not written for set -u)
+set +u
+# shellcheck disable=SC1091
+source "$NVM_DIR/nvm.sh"
+if ! nvm ls 26 > /dev/null 2>&1; then
+    echo "[plan] node 26: nvm install 26"
+    nvm install 26
+fi
+nvm use 26 > /dev/null
+set -u
+
+if [[ "$(node -v)" != v26.* ]]; then
+    echo "[err] node 26 is needed, found $(node -v)"
+    exit 1
 fi
 
 # GITHUB SIGN-IN (the org's repos are private; the ssh key step uses it)
