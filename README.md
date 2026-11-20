@@ -59,6 +59,15 @@ person instead), `--skip a,b`, `--only a,b`. A `clone_base` in
 `config/ducky.json` clones from a local folder instead of GitHub (tests,
 a machine whose key is not on GitHub yet).
 
+Whisper is optional. The sidequest's transcription is ElevenLabs Scribe
+(plan_0015 §4c); whisper.cpp (brew `whisper-cpp` + the 1.6 GB
+`ggml-large-v3-turbo.bin`) is only an offline / API-error fallback, so
+install skips it unless asked: `ducky-pro whisper install` (or
+`install --with whisper`). `ducky-pro whisper` says whether it is there;
+`health` reads "optional, not installed" without it. Without Scribe and
+without whisper the bridge still starts and reads "transcription: not
+configured".
+
 Never touched: an existing mongod (reused as it is: config, dbpath, data),
 other nginx server files, nginx.conf, other launchd agents. Sudo is only
 ever asked for: trusting the mkcert CA (when not trusted yet), an
@@ -67,7 +76,7 @@ itself), reloading a root-owned nginx.
 
 ## Commands
 
-`ducky-pro install | start | stop | status | update | health | logs [api|app|local|sidequest|nginx] [-f] | link`
+`ducky-pro install | start | stop | status | update | health | logs [api|app|local|sidequest|nginx] [-f] | link | whisper [status|install]`
 
 `ducky-pro start` ends with the boot pull: `POST https://api.ducky.localhost/api/0.1.0/local/pull`
 (gate only, no session or client key, through nginx). It never blocks the
