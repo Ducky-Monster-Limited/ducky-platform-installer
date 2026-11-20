@@ -7,8 +7,8 @@
 //     clones of the committed repos next to the installer, temp launchd /
 //     nginx / hosts targets): the second run applies nothing; the envs
 //     start from env.base.json, ducky_secrets is cloned
-//   - whisper is optional: install skips it by itself (no --skip), brew is
-//     never asked for whisper-cpp, `ducky-pro whisper` says not installed
+//   - the steps and verbs are exactly the platform's (no offline
+//     transcription step or verb)
 //   - update --dry-run plans the latest pro release, moves nothing
 //   - the existing mongod, the real nginx servers folder, /etc/hosts and
 //     ~/Library/LaunchAgents are the same before and after
@@ -144,8 +144,8 @@ function main() {
     let plist    = null
     let lint     = null
     let envs     = null
-    let status   = null
-    let dry      = null
+    let keys     = null
+    let verbs    = null
     let update   = null
 
     fs.writeFileSync(env.DUCKY_HOSTS_FILE, '127.0.0.1 localhost\n')
@@ -158,12 +158,16 @@ function main() {
     second = install(env)
     check('second install applies nothing', second.code === 0 && second.applied === 0, second.applied + ' step(s) applied')
 
-    // whisper optional: skipped unasked, never a brew formula, status 0
-    check('whisper: skipped as optional without --skip', /\[skip\]\s+whisper \(optional, /.test(first.out) && !/whisper-cpp/.test(first.out.split('\n').filter(function(line) { return /packages/.test(line) }).join('\n')))
-    status = child_process.spawnSync(process.execPath, [path.join(dir_root, 'bin', 'ducky-pro'), 'whisper'], { encoding : 'utf8', env : Object.assign({}, process.env, env) })
-    check('whisper: `ducky-pro whisper` exits 0 and says optional', status.status === 0 && /optional, not installed|whisper-cli \+/.test(status.stdout), status.stdout.trim())
-    dry = child_process.spawnSync(process.execPath, [path.join(dir_root, 'bin', 'ducky-pro'), 'install', '--dry-run', '--with', 'whisper', '--only', 'whisper'], { encoding : 'utf8', env : Object.assign({}, process.env, env), input : '' })
-    check('whisper: --only whisper plans it (dry run)', dry.status === 0 && (/\[plan\]\s+whisper/.test(dry.stdout) || /\[ok\]\s+whisper/.test(dry.stdout)), dry.stdout.split('\n').filter(function(line) { return /whisper/.test(line) }).join(' | '))
+    // the steps: exactly these, in this order (Scribe transcribes, no
+    // offline fallback step or verb)
+    keys = require(path.join(dir_root, 'lib', 'steps')).map(function(step) {
+
+        return step.key
+
+    })
+    check('steps: exactly the platform\'s, in order', keys.join(',') === 'platform,brew,packages,dirs,github,sources,npm,python,config,migrations,ca,certs,hosts,nginx_file,nginx_reload,agents,command,sidequest', keys.join(','))
+    verbs = (fs.readFileSync(path.join(dir_root, 'bin', 'ducky-pro'), 'utf8').match(/let verbs = \[([^\]]*)\]/) || [])[1] || ''
+    check('verbs: exactly the platform\'s', verbs.replace(/[\s']/g, '') === 'health,install,link,logs,start,status,stop,update', verbs)
 
     // what landed
     conf = fs.readFileSync(path.join(env.DUCKY_NGINX_SERVERS, 'ducky_local_test.conf'), 'utf8')

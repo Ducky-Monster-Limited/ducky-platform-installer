@@ -1,6 +1,6 @@
 // sidequest.js — the sidequest config step (plan_0011 §3, §4 step 7) on a
 // temp DUCKY_HOME, no terminal (the questions answer empty): the example
-// without a password, this install's whisper paths, 0600, idempotent, an
+// without a password, nothing but obs, recordings and workspace_id, 0600, idempotent, an
 // existing file (a password and the foot's workspace in it) never
 // rewritten, only its mode put back. The password is never printed.
 //
@@ -54,8 +54,7 @@ async function main() {
     check('apply writes the file', result.ok && fs.existsSync(file), result.detail)
     check('mode 0600', (fs.statSync(file).mode & 0o777) === 0o600)
     check('no password in the example', data.obs.password === '')
-    check('whisper model at the installer\'s models folder', data.whisper.model === path.join(paths.models, 'ggml-large-v3-turbo.bin'), data.whisper.model)
-    check('whisper-cli of the brew prefix', data.whisper.bin === path.join(paths.brew, 'bin', 'whisper-cli'))
+    check('keys: obs, recordings, workspace_id only', Object.keys(data).sort().join(',') === 'obs,recordings,workspace_id', Object.keys(data).join(','))
     check('recordings default ~/Movies, workspace default', data.recordings === '~/Movies' && data.workspace_id === null)
     check('check after: ok, says no password yet', step.check(ctx).ok && /no OBS password yet/.test(step.check(ctx).detail))
 
