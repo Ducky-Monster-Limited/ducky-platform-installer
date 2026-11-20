@@ -78,6 +78,43 @@ itself), reloading a root-owned nginx.
 
 `ducky-pro install | start | stop | status | update | health | logs [api|app|local|sidequest|nginx] [-f] | link | whisper [status|install]`
 
+## Updates follow the pro releases
+
+`ducky-pro update` moves the install to the latest pro release, never to
+main by itself. A release is the GitHub release (and tag) `X.Y.Z-pro-rcN`
+on ducky-platform-pro, the latest the one marked Latest (`gh`), else the
+highest such tag. Every repo goes to that release's commit, all together
+or none (a failed checkout puts every repo back):
+
+| repo | commit of a release |
+|---|---|
+| ducky_platform_app_pro | its tag |
+| ducky_platform_api | its build commit on main (subject `X.Y.Z-pro-rcN` or `X.Y.Z-pro-rcN: …`) |
+| ducky_cli | the ref the api's `lib_cli_pro` `config.ref` names at that commit |
+| ducky_platform_shared, ducky_platform_app, ducky_design | their last commit on main when the release was cut (the later build commit) |
+| ducky_secrets | main |
+
+It refuses while a job runs, while a sidequest session records or hears,
+and on local changes; then it stops the stack, moves the repos, runs npm
+(when a lockfile changed), the envs, the release's local migrations and
+the agents, keeps the release in `config/release.json`, starts and checks
+health. Config, secrets, the database and media stay as they are.
+
+```
+ducky-pro update --check                 # installed vs latest, nothing changed
+ducky-pro update --dry-run               # the moves per repo, nothing changed
+ducky-pro update                         # the latest release
+ducky-pro update --release 0.0.1-pro-rc11  # that release (also back to an older one)
+ducky-pro update --main                  # main in every repo, deliberately
+```
+
+The local api checks for a newer release about 15 s after it starts and
+every 4 hours (gh, else `git ls-remote --tags`, never asking for a
+password) and the app's header shows "update rcN available" in the
+middle; a click opens Terminal with `ducky-pro update`. It never updates
+by itself, and the notice is not offered while a sidequest session
+records or hears.
+
 `ducky-pro start` ends with the boot pull: `POST https://api.ducky.localhost/api/0.1.0/local/pull`
 (gate only, no session or client key, through nginx). It never blocks the
 start, it prints one line:
@@ -106,4 +143,5 @@ git). A second instance sets `instance` and shifted ports in its
 node test/run.js                                     # steps twice on a temp home (clones the workspace's committed HEADs), nothing outside touched
 node test/localhost-cookies.js                       # *.localhost cookies + CORS in a real Chrome
 node test/pull.js                                    # ducky-pro start's pull hook: 200 / 409 / 401 / 503 lines on a fake api
+node test/update.js                                  # update follows the releases: fake repos, check, dry run, moves, rollback, --main
 ```

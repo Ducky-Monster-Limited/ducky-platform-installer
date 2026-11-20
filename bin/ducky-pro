@@ -4,7 +4,8 @@
 //   ducky-pro install [--path <dir>] [--dry-run] [--yes] [--no-sudo]
 //                 [--skip a,b] [--only a,b] [--with whisper]
 //   ducky-pro start [--no-open]     ducky-pro stop [--force]     ducky-pro status
-//   ducky-pro update                ducky-pro health             ducky-pro link
+//   ducky-pro update [--check] [--release <v>] [--main] [--dry-run]
+//   ducky-pro health                ducky-pro link
 //   ducky-pro logs [api|app|local|sidequest|nginx] [-f]
 //   ducky-pro whisper [status|install]   (optional offline transcription)
 //

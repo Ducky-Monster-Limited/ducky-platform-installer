@@ -9,6 +9,7 @@
 //     start from env.base.json, ducky_secrets is cloned
 //   - whisper is optional: install skips it by itself (no --skip), brew is
 //     never asked for whisper-cpp, `ducky-pro whisper` says not installed
+//   - update --dry-run plans the latest pro release, moves nothing
 //   - the existing mongod, the real nginx servers folder, /etc/hosts and
 //     ~/Library/LaunchAgents are the same before and after
 //
@@ -118,6 +119,7 @@ function main() {
     let home     = path.join(tmp, 'DuckyTest')
     let env      = {
         DUCKY_HOME          : home,
+        DUCKY_HOME_FILE     : path.join(tmp, '.ducky_home'),
         DUCKY_HOSTS_FILE    : path.join(tmp, 'hosts'),
         DUCKY_LAUNCH_AGENTS : path.join(tmp, 'LaunchAgents'),
         DUCKY_NGINX_SERVERS : path.join(tmp, 'nginx_servers')
@@ -144,6 +146,7 @@ function main() {
     let envs     = null
     let status   = null
     let dry      = null
+    let update   = null
 
     fs.writeFileSync(env.DUCKY_HOSTS_FILE, '127.0.0.1 localhost\n')
     fs.mkdirSync(path.join(home, 'config'), { recursive : true })
@@ -181,6 +184,10 @@ function main() {
     check('api env: sources path_roots', Array.isArray(envs.services.sources.path_roots) && envs.services.sources.path_roots[0] === os.homedir())
     check('clones: ducky_secrets, no env.json (the base env without secrets)', fs.existsSync(path.join(home, 'repos', 'ducky_secrets', 'dev.json')) && !fs.existsSync(path.join(home, 'repos', 'ducky_platform_api', 'env.json')) && fs.existsSync(path.join(home, 'repos', 'ducky_platform_api', 'env.base.json')))
     check('api env: the key import reads ducky-secrets, session secrets minted', envs.services.system.import_secrets === 'ducky-secrets' && !/^<missing/.test(envs.session.secret || '<missing') && !/^<missing/.test(envs.services.system.secret_key || '<missing'))
+    // update: a dry run on the fresh install plans the latest pro release
+    // of the workspace's repos for api, app_pro, cli (nothing moved)
+    update = child_process.spawnSync(process.execPath, [path.join(dir_root, 'bin', 'ducky-pro'), 'update', '--dry-run'], { encoding : 'utf8', env : Object.assign({}, process.env, env), input : '' })
+    check('update --dry-run: the latest pro release, exits 0, nothing moved', update.status === 0 && /update to \d+\.\d+\.\d+-pro-rc\d+ \(tags\) \(dry run\)/.test(update.stdout) && !fs.existsSync(path.join(home, 'config', 'release.json')), update.stdout.split('\n').filter(function(line) { return /update to|\[plan\]|\[err\]/.test(line) }).join(' | '))
     check('migrations recorded', /000-baseline\.js/.test(fs.readFileSync(path.join(home, 'config', 'migrations.json'), 'utf8')))
 
     // nothing outside touched
